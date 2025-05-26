@@ -1,15 +1,16 @@
-
 import React, { useState } from 'react';
 import MainLayout from '../../components/layout/MainLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Users, Search, Plus, Upload, Filter } from 'lucide-react';
+import { Users, Search, Filter } from 'lucide-react';
 import LeadFilters from '../../components/leads/LeadFilters';
+import { useNavigate } from 'react-router-dom';
 
 const LeadsPage: React.FC = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [hasActiveFilters, setHasActiveFilters] = useState(false);
+  const navigate = useNavigate();
 
   const handleFiltersChange = (hasFilters: boolean) => {
     setHasActiveFilters(hasFilters);
@@ -40,16 +41,6 @@ const LeadsPage: React.FC = () => {
                 <span className="ml-1 bg-background text-foreground rounded-full w-2 h-2"></span>
               )}
             </Button>
-            
-            <Button variant="outline" size="sm">
-              <Upload className="h-4 w-4 mr-2" />
-              Importar Leads
-            </Button>
-            
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Lead
-            </Button>
           </div>
         </div>
         
@@ -64,8 +55,7 @@ const LeadsPage: React.FC = () => {
               Importe novos leads ou adicione manualmente para começar.
             </p>
             <div className="flex gap-2">
-              <Button>Importar Leads</Button>
-              <Button variant="outline">Adicionar Lead</Button>
+              <Button onClick={() => navigate('/leads/importar')}>Importar Leads</Button>
             </div>
           </CardContent>
         </Card>

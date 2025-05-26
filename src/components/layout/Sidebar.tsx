@@ -102,7 +102,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
 
         {/* Tools */}
         <div className="pt-6 mt-6 border-t border-sidebar-border space-y-1">
-          <SidebarLink to="/import" icon={<Database className="h-5 w-5" />} label="Importação" />
+          
           <SidebarLink to="/chatbot" icon={<MessageSquare className="h-5 w-5" />} label="Chatbot" />
         </div>
       </nav>

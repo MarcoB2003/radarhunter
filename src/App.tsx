@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -12,7 +11,7 @@ import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
 import LeadsPage from "./pages/leads/LeadsPage";
-import LeadImport from "./pages/leads/LeadImport";
+import LeadImport from "./pages/leads/LeadImport"; // <-- correto
 import Pipeline from "./pages/Pipeline";
 import Chatbot from "./pages/Chatbot";
 import NotFound from "@/pages/NotFound";
@@ -45,7 +44,7 @@ const App = () => (
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/leads" element={<LeadsPage />} />
-                <Route path="/import" element={<LeadImport />} />
+                <Route path="/leads/importar" element={<LeadImport />} /> {/* <-- corrigido aqui */}
                 <Route path="/pipeline" element={<Pipeline />} />
                 <Route path="/chatbot" element={<Chatbot />} />
                 
