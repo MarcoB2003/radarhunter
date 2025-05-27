@@ -1,7 +1,7 @@
 
 import React from 'react';
 import MainLayout from '../components/layout/MainLayout';
-import AICloserDashboard from '../components/dashboard/AICloserDashboard';
+import AICloserDashboard from '../components/empresas/AICloserDashboard';
 
 const AICloser: React.FC = () => {
   return (

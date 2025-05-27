@@ -93,7 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
             </h3>
           </div>
           <div className="space-y-1">
-            <SidebarLink to="/analytics" icon={<BarChart3 className="h-5 w-5" />} label="Analytics" />
+            <SidebarLink to="/empresas" icon={<BarChart3 className="h-5 w-5" />} label="Empresas" />
             <SidebarLink to="/campaigns" icon={<MessageSquare className="h-5 w-5" />} label="Campanhas" />
             <SidebarLink to="/social" icon={<Eye className="h-5 w-5" />} label="Social" />
             <SidebarLink to="/reports" icon={<FilePlus className="h-5 w-5" />} label="Relatórios" />

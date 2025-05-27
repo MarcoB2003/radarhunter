@@ -1,7 +1,7 @@
 
 import React from 'react';
 import MainLayout from '../components/layout/MainLayout';
-import LeadScoringDashboard from '../components/dashboard/LeadScoringDashboard';
+import LeadScoringDashboard from '../components/empresas/LeadScoringDashboard';
 
 const AIScoring: React.FC = () => {
   return (

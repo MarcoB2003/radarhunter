@@ -15,6 +15,8 @@ import LeadImport from "./pages/leads/LeadImport"; // <-- correto
 import Pipeline from "./pages/Pipeline";
 import Chatbot from "./pages/Chatbot";
 import NotFound from "@/pages/NotFound";
+// Pages
+import EmpresasPage from "./pages/EmpresasPage";
 
 // New AI Pages
 import AIScoring from "./pages/AIScoring";
@@ -47,6 +49,9 @@ const App = () => (
                 <Route path="/leads/importar" element={<LeadImport />} /> {/* <-- corrigido aqui */}
                 <Route path="/pipeline" element={<Pipeline />} />
                 <Route path="/chatbot" element={<Chatbot />} />
+                
+                {/* New route added */}
+                <Route path="/empresas" element={<EmpresasPage />} />
                 
                 {/* AI Routes */}
                 <Route path="/ai-scoring" element={<AIScoring />} />

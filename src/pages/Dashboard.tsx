@@ -24,14 +24,14 @@ import { fetchOpportunities as fetchOpportunitiesService } from '../services/opp
 import { toast } from '@/components/ui/use-toast';
 
 // Import dos novos componentes que vamos criar
-import LeadScoringDashboard from '@/components/dashboard/LeadScoringDashboard';
-import AISdrDashboard from '@/components/dashboard/AISdrDashboard';
-import AICloserDashboard from '@/components/dashboard/AICloserDashboard';
-import AIManagerDashboard from '@/components/dashboard/AIManagerDashboard';
-import PipelineDashboard from '@/components/dashboard/PipelineDashboard';
-import AnalyticsDashboard from '@/components/dashboard/AnalyticsDashboard';
-import SocialMonitoringDashboard from '@/components/dashboard/SocialMonitoringDashboard';
-import CampaignsDashboard from '@/components/dashboard/CampaignsDashboard';
+import LeadScoringDashboard from '@/components/empresas/LeadScoringDashboard';
+import AISdrDashboard from '@/components/empresas/AISdrDashboard';
+import AICloserDashboard from '@/components/empresas/AICloserDashboard';
+import AIManagerDashboard from '@/components/empresas/AIManagerDashboard';
+import PipelineDashboard from '@/components/empresas/PipelineDashboard';
+import AnalyticsDashboard from '@/components/empresas/AnalyticsDashboard';
+import SocialMonitoringDashboard from '@/components/empresas/SocialMonitoringDashboard';
+import CampaignsDashboard from '@/components/empresas/CampaignsDashboard';
 
 const Dashboard: React.FC = () => {
   const dispatch = useAppDispatch();

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import MainLayout from '../components/layout/MainLayout';
-import AISdrDashboard from '../components/dashboard/AISdrDashboard';
+import AISdrDashboard from '../components/empresas/AISdrDashboard';
 
 const AISdr: React.FC = () => {
   return (
