@@ -17,6 +17,9 @@ import Chatbot from "./pages/Chatbot";
 import NotFound from "@/pages/NotFound";
 // Pages
 import EmpresasPage from "./pages/EmpresasPage";
+import CampaignsPage from "./pages/CampaignsPage";
+import SocialPage from "./pages/SocialPage";
+import ReportsPage from "./pages/ReportsPage";
 
 // New AI Pages
 import AIScoring from "./pages/AIScoring";
@@ -50,8 +53,11 @@ const App = () => (
                 <Route path="/pipeline" element={<Pipeline />} />
                 <Route path="/chatbot" element={<Chatbot />} />
                 
-                {/* New route added */}
+                {/* Analytics & Automation routes */}
                 <Route path="/empresas" element={<EmpresasPage />} />
+                <Route path="/campaigns" element={<CampaignsPage />} />
+                <Route path="/social" element={<SocialPage />} />
+                <Route path="/reports" element={<ReportsPage />} />
                 
                 {/* AI Routes */}
                 <Route path="/ai-scoring" element={<AIScoring />} />
