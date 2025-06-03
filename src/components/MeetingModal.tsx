@@ -1,5 +1,4 @@
-// ✅ src/components/MeetingModal.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -21,9 +20,16 @@ interface MeetingModalProps {
     company: string;
     date_time: string;
   }) => void;
+  editing?: {
+    id: string;
+    name: string;
+    role: string;
+    company: string;
+    date_time: string;
+  } | null;
 }
 
-const MeetingModal: React.FC<MeetingModalProps> = ({ open, onClose, onCreated }) => {
+const MeetingModal: React.FC<MeetingModalProps> = ({ open, onClose, onCreated, editing }) => {
   const [formData, setFormData] = React.useState({
     name: '',
     role: '',
@@ -31,29 +37,65 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ open, onClose, onCreated })
     date_time: ''
   });
 
+  useEffect(() => {
+    if (editing) {
+      setFormData({
+        name: editing.name,
+        role: editing.role,
+        company: editing.company,
+        date_time: editing.date_time.slice(0, 16) // datetime-local format
+      });
+    } else {
+      setFormData({
+        name: '',
+        role: '',
+        company: '',
+        date_time: ''
+      });
+    }
+  }, [editing]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const payload = {
+      name: formData.name,
+      role: formData.role,
+      company: formData.company,
+      date_time: new Date(formData.date_time).toISOString()
+    };
+
     try {
-      const { data, error } = await supabase.from('meetings').insert([{
-        name: formData.name,
-        role: formData.role,
-        company: formData.company,
-        date_time: new Date(formData.date_time).toISOString()
-      }]).select().single(); // <-- pega os dados inseridos
+      let response;
+      if (editing) {
+        response = await supabase
+          .from('meetings')
+          .update(payload)
+          .eq('id', editing.id)
+          .select()
+          .single();
+      } else {
+        response = await supabase
+          .from('meetings')
+          .insert([payload])
+          .select()
+          .single();
+      }
+
+      const { data, error } = response;
 
       if (error) {
         console.error('Erro Supabase:', error);
-        alert(`Erro ao agendar reunião: ${error.message}`);
+        alert(`Erro ao ${editing ? 'editar' : 'criar'} reunião: ${error.message}`);
         return;
       }
 
-      alert('Reunião agendada com sucesso');
+      alert(`Reunião ${editing ? 'atualizada' : 'agendada'} com sucesso!`);
       onClose();
-      onCreated(data); // <-- envia os dados da reunião criada
+      onCreated(data);
     } catch (err) {
       console.error('Erro inesperado:', err);
-      alert('Erro inesperado ao agendar reunião');
+      alert('Erro inesperado ao salvar reunião');
     }
   };
 
@@ -69,7 +111,7 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ open, onClose, onCreated })
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Agendar Reunião</DialogTitle>
+          <DialogTitle>{editing ? 'Editar Reunião' : 'Agendar Reunião'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -121,7 +163,9 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ open, onClose, onCreated })
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit">Agendar</Button>
+            <Button type="submit">
+              {editing ? 'Salvar Alterações' : 'Agendar'}
+            </Button>
           </div>
         </form>
       </DialogContent>

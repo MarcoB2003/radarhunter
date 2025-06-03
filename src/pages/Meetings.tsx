@@ -10,9 +10,9 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import MeetingModal from '@/components/MeetingModal';
-import { Plus, Building2, User, Briefcase, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Building2, User, Briefcase, Calendar as CalendarIcon, Pencil, Trash2 } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { supabase } from '@/lib/supabase';
 import { startOfDay, endOfDay } from 'date-fns';
@@ -31,6 +31,7 @@ const Meetings: React.FC = () => {
   const [allMeetings, setAllMeetings] = useState<Meeting[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lastCreatedMeeting, setLastCreatedMeeting] = useState<Meeting | null>(null);
+  const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null);
 
   const fetchAllMeetings = async () => {
     const { data, error } = await supabase.from('meetings').select('*');
@@ -58,6 +59,24 @@ const Meetings: React.FC = () => {
     setTimeout(() => setLastCreatedMeeting(null), 5000);
     await fetchAllMeetings();
     await fetchMeetings(selectedDate);
+  };
+
+  const handleDelete = async (id: string) => {
+    const confirm = window.confirm("Tem certeza que deseja deletar esta reunião?");
+    if (!confirm) return;
+    const { error } = await supabase.from('meetings').delete().eq('id', id);
+    if (error) {
+      alert("Erro ao deletar reunião");
+      console.error(error);
+    } else {
+      await fetchAllMeetings();
+      await fetchMeetings(selectedDate);
+    }
+  };
+
+  const handleEdit = (meeting: Meeting) => {
+    setEditingMeeting(meeting);
+    setIsModalOpen(true);
   };
 
   useEffect(() => {
@@ -126,7 +145,15 @@ const Meetings: React.FC = () => {
               {meetings.length > 0 ? (
                 <div className="space-y-4">
                   {meetings.map((meeting) => (
-                    <div key={meeting.id} className="p-4 rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div key={meeting.id} className="p-4 rounded-lg border border-gray-200 bg-white shadow-sm relative">
+                      <div className="absolute top-2 right-2 flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => handleEdit(meeting)}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDelete(meeting.id)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                       <div className="flex items-center gap-2 mb-1">
                         <User className="w-4 h-4 text-gray-500" />
                         <span className="font-semibold text-lg">{meeting.name}</span>
@@ -161,8 +188,12 @@ const Meetings: React.FC = () => {
 
       <MeetingModal
         open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingMeeting(null);
+        }}
         onCreated={handleCreated}
+        editing={editingMeeting}
       />
     </MainLayout>
   );
