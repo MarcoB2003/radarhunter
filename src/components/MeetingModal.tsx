@@ -31,6 +31,7 @@ interface MeetingModalProps {
 
 const MeetingModal: React.FC<MeetingModalProps> = ({ open, onClose, onCreated, editing }) => {
   const [formData, setFormData] = React.useState({
+    id: '',
     name: '',
     role: '',
     company: '',
@@ -40,13 +41,15 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ open, onClose, onCreated, e
   useEffect(() => {
     if (editing) {
       setFormData({
+        id: editing.id,
         name: editing.name,
         role: editing.role,
         company: editing.company,
-        date_time: editing.date_time.slice(0, 16) // datetime-local format
+        date_time: editing.date_time.slice(0, 16)
       });
     } else {
       setFormData({
+        id: '',
         name: '',
         role: '',
         company: '',
@@ -66,23 +69,28 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ open, onClose, onCreated, e
     };
 
     try {
-      let response;
+      let data = null;
+      let error = null;
+
       if (editing) {
-        response = await supabase
+        const response = await supabase
           .from('meetings')
           .update(payload)
-          .eq('id', editing.id)
-          .select()
-          .single();
+          .eq('id', formData.id)
+          .select(); // ⚠️ sem .single()
+
+        data = response.data;
+        error = response.error;
       } else {
-        response = await supabase
+        const response = await supabase
           .from('meetings')
           .insert([payload])
           .select()
           .single();
-      }
 
-      const { data, error } = response;
+        data = response.data;
+        error = response.error;
+      }
 
       if (error) {
         console.error('Erro Supabase:', error);
@@ -90,9 +98,14 @@ const MeetingModal: React.FC<MeetingModalProps> = ({ open, onClose, onCreated, e
         return;
       }
 
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        alert('Nenhuma reunião foi retornada.');
+        return;
+      }
+
       alert(`Reunião ${editing ? 'atualizada' : 'agendada'} com sucesso!`);
       onClose();
-      onCreated(data);
+      onCreated(Array.isArray(data) ? data[0] : data); // garante que seja um único objeto
     } catch (err) {
       console.error('Erro inesperado:', err);
       alert('Erro inesperado ao salvar reunião');
