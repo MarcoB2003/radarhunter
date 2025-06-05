@@ -62,6 +62,21 @@ export type Contact = {
   updatedAt: string;
 };
 
+// Tipo específico para o componente SocialMonitoringDashboard
+export type SocialContact = {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  last_activity_type: string;
+  last_activity_time: string;
+  platform: string;
+  alert: string;
+  status: string;
+  engagement_score: number;
+  avatar_url?: string;
+};
+
 // Social Monitoring types
 export type SocialSignal = {
   id: string;
@@ -76,6 +91,17 @@ export type SocialSignal = {
 // Pipeline related types
 export type OpportunityStage = 'lead' | 'qualification' | 'proposal' | 'negotiation' | 'closing' | 'lost';
 
+export type Opportunity = {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  companyId: string;
+  contactId: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export interface PipelineStage {
   id: string;
   name: string;
@@ -83,7 +109,9 @@ export interface PipelineStage {
   color: string;
 }
 
-export type { Opportunity } from './opportunity';
+// Removendo exportações duplicadas
+// export type { Opportunity } from './opportunity';
+// export { SocialContact } from './index';
 
 // IA Closer types
 export type BuyingSignal = {

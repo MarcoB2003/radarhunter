@@ -1,0 +1,14 @@
+declare global {
+  interface Window {
+    __NEXT_DATA__: {
+      props: {
+        pageProps: {
+          NEXT_PUBLIC_SUPABASE_URL: string;
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+        };
+      };
+    };
+    NEXT_PUBLIC_SUPABASE_URL: string;
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
+  }
+}

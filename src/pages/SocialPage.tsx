@@ -4,7 +4,7 @@ import SocialMonitoringDashboard from '../components/empresas/SocialMonitoringDa
 
 const SocialPage: React.FC = () => {
   return (
-    <MainLayout title="Social">
+    <MainLayout title="Social" requireAuth={false}>
       <SocialMonitoringDashboard />
     </MainLayout>
   );
