@@ -1,31 +1,27 @@
-
 import React from 'react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
+  DialogFooter
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Opportunity, PipelineStage } from '@/types';
-import { CalendarIcon } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
-import { useForm } from 'react-hook-form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Opportunity, OpportunityStage, PipelineStage } from "@/types";
 import { Slider } from '@/components/ui/slider';
 
 interface OpportunityModalProps {
@@ -46,26 +42,35 @@ const OpportunityModal: React.FC<OpportunityModalProps> = ({
   initialStageId
 }) => {
   const isEditing = !!opportunity;
+
   const { register, handleSubmit, formState: { errors, isDirty }, setValue, watch } = useForm({
-    defaultValues: {
-      title: opportunity?.title || '',
-      value: opportunity?.value || 0,
-      stageId: opportunity?.stageId || initialStageId || stages[0]?.id || '',
-      closingProbability: opportunity?.closingProbability || 50,
-      expectedCloseDate: opportunity?.expectedCloseDate ? new Date(opportunity.expectedCloseDate) : undefined,
-      notes: opportunity?.notes || '',
-      assignedTo: opportunity?.assignedTo || '',
+    defaultValues: opportunity || {
+      title: '',
+      value: 0,
+      stage_id: stages[0]?.id as OpportunityStage || 'lead',
+      closing_probability: 50,
+      expected_close_date: '',
+      notes: null,
+      lead_id: null,
+      contact_id: null,
+      buying_signals: [],
+      proposal_generated: false,
+      objection_handling: [],
+      urgency_factors: []
     }
   });
 
-  const closeDate = watch('expectedCloseDate');
-  const probability = watch('closingProbability');
+  const closeDateStr = watch('expected_close_date');
+  const closeDate = closeDateStr ? new Date(closeDateStr) : null;
+  const probability = watch('closing_probability');
 
   const onSubmit = (data: any) => {
-    const opportunityData = {
+    const opportunityData: Partial<Opportunity> = {
       ...data,
       id: opportunity?.id,
-      expectedCloseDate: data.expectedCloseDate ? data.expectedCloseDate.toISOString() : undefined,
+      expected_close_date: data.expected_close_date
+        ? data.expected_close_date.toISOString()
+        : undefined,
     };
 
     onSave(opportunityData);
@@ -77,13 +82,15 @@ const OpportunityModal: React.FC<OpportunityModalProps> = ({
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Editar Oportunidade' : 'Nova Oportunidade'}</DialogTitle>
           <DialogDescription>
-            {isEditing 
-              ? 'Atualize os detalhes desta oportunidade de venda.' 
+            {isEditing
+              ? 'Atualize os detalhes desta oportunidade de venda.'
               : 'Preencha os detalhes para criar uma nova oportunidade de venda.'}
           </DialogDescription>
         </DialogHeader>
+
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-4 py-4">
+
             <div className="grid gap-2">
               <Label htmlFor="title">Título</Label>
               <Input
@@ -102,9 +109,9 @@ const OpportunityModal: React.FC<OpportunityModalProps> = ({
                 id="value"
                 type="number"
                 placeholder="0.00"
-                {...register('value', { 
+                {...register('value', {
                   required: 'Valor é obrigatório',
-                  min: { value: 0, message: 'Valor não pode ser negativo' } 
+                  min: { value: 0, message: 'Valor não pode ser negativo' }
                 })}
               />
               {errors.value && (
@@ -113,16 +120,16 @@ const OpportunityModal: React.FC<OpportunityModalProps> = ({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="stage">Estágio</Label>
+              <Label htmlFor="stage_id">Estágio</Label>
               <Select
-                defaultValue={opportunity?.stageId || initialStageId || stages[0]?.id}
-                onValueChange={(value) => setValue('stageId', value)}
+                defaultValue={opportunity?.stage_id || initialStageId || stages[0]?.id}
+                {...register('stage_id')}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um estágio" />
                 </SelectTrigger>
                 <SelectContent>
-                  {stages.map((stage) => (
+                  {stages.map(stage => (
                     <SelectItem key={stage.id} value={stage.id}>
                       {stage.name}
                     </SelectItem>
@@ -133,23 +140,27 @@ const OpportunityModal: React.FC<OpportunityModalProps> = ({
 
             <div className="grid gap-2">
               <div className="flex justify-between">
-                <Label htmlFor="closingProbability">Probabilidade de Fechamento: {probability}%</Label>
+                <Label htmlFor="closing_probability">Probabilidade de Fechamento (%)</Label>
               </div>
               <Slider
-                defaultValue={[opportunity?.closingProbability || 50]}
+                defaultValue={[watch('closing_probability') || 50]}
+                min={0}
                 max={100}
-                step={5}
-                onValueChange={(values) => setValue('closingProbability', values[0])}
+                step={1}
+                onValueChange={value => setValue('closing_probability', value[0])}
               />
+              <p className="text-sm text-muted-foreground">
+                {watch('closing_probability') || 50}%
+              </p>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="expectedCloseDate">Data Prevista de Fechamento</Label>
+              <Label htmlFor="expected_close_date">Data Prevista de Fechamento</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    id="date"
-                    variant={"outline"}
+                    id="expected_close_date"
+                    variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
                       !closeDate && "text-muted-foreground"
@@ -157,7 +168,7 @@ const OpportunityModal: React.FC<OpportunityModalProps> = ({
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {closeDate ? (
-                      format(closeDate, "PPP", { locale: ptBR })
+                      format(closeDate, 'PPP', { locale: ptBR })
                     ) : (
                       <span>Selecionar data</span>
                     )}
@@ -166,8 +177,8 @@ const OpportunityModal: React.FC<OpportunityModalProps> = ({
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={closeDate}
-                    onSelect={(date) => setValue('expectedCloseDate', date)}
+                    selected={closeDate || null}
+                    onSelect={(date) => setValue('expected_close_date', date ? date.toISOString() : '')}
                     initialFocus
                     locale={ptBR}
                   />
@@ -176,11 +187,11 @@ const OpportunityModal: React.FC<OpportunityModalProps> = ({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="assignedTo">Responsável</Label>
+              <Label htmlFor="assigned_to">Responsável</Label>
               <Input
-                id="assignedTo"
+                id="assigned_to"
                 placeholder="Nome do responsável"
-                {...register('assignedTo')}
+                {...register('assigned_to')}
               />
             </div>
 
@@ -193,6 +204,7 @@ const OpportunityModal: React.FC<OpportunityModalProps> = ({
               />
             </div>
           </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar

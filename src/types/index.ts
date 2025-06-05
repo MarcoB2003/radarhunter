@@ -74,32 +74,16 @@ export type SocialSignal = {
 };
 
 // Pipeline related types
-export type PipelineStage = {
+export type OpportunityStage = 'lead' | 'qualification' | 'proposal' | 'negotiation' | 'closing' | 'lost';
+
+export interface PipelineStage {
   id: string;
   name: string;
   order: number;
-  sla?: number; // SLA em horas
-  automatedActions?: string[];
-};
+  color: string;
+}
 
-export type Opportunity = {
-  id: string;
-  title: string;
-  value: number;
-  leadId: string;
-  stageId: string;
-  closingProbability: number;
-  expectedCloseDate?: string;
-  notes?: string;
-  assignedTo?: string;
-  contactId?: string;
-  buyingSignals?: BuyingSignal[];
-  proposalGenerated?: boolean;
-  objectionHandling?: ObjectionResponse[];
-  urgencyFactors?: string[];
-  createdAt: string;
-  updatedAt: string;
-};
+export type { Opportunity } from './opportunity';
 
 // IA Closer types
 export type BuyingSignal = {

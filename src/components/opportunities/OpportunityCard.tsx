@@ -1,65 +1,133 @@
-
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Opportunity } from '@/types';
-import { Calendar, DollarSign, User } from 'lucide-react';
+import { STAGES } from '@/lib/pipeline-utils';
+import { Calendar, DollarSign, User, Trash2, Pencil } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { formatCurrency } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 interface OpportunityCardProps {
   opportunity: Opportunity;
   onCardClick: (id: string) => void;
+  onDeleteClick: (opportunity: Opportunity) => void;
+  onEditClick: (opportunity: Opportunity) => void;
 }
 
-const OpportunityCard: React.FC<OpportunityCardProps> = ({ 
-  opportunity, 
-  onCardClick 
+const OpportunityCard: React.FC<OpportunityCardProps> = ({
+  opportunity,
+  onCardClick,
+  onDeleteClick,
+  onEditClick
 }) => {
-  const { id, title, value, closingProbability, expectedCloseDate, assignedTo } = opportunity;
-  
-  // Determine background color based on closing probability
+  const {
+    id,
+    title,
+    value,
+    closing_probability,
+    expected_close_date,
+    assigned_to,
+    stage_id
+  } = opportunity;
+
   const getBgColor = (probability: number) => {
-    if (probability >= 75) return 'bg-emerald-100 border-emerald-300';
-    if (probability >= 50) return 'bg-amber-50 border-amber-200';
-    return 'bg-card border-border';
+    const stage = STAGES.find(s => s.id === opportunity.stage_id);
+    if (!stage) return 'bg-card border-border';
+    
+    if (probability >= 75) return `${stage.color} border-${stage.color.replace('bg-', '')}`;
+    if (probability >= 50) return `${stage.color} border-${stage.color.replace('bg-', '')}`;
+    return `${stage.color} border-${stage.color.replace('bg-', '')}`;
   };
 
   return (
-    <Card 
-      className={`mb-2 p-3 cursor-pointer hover:shadow-md transition-shadow ${getBgColor(closingProbability)}`}
-      onClick={() => onCardClick(id)}
+    <Card
+      className={`relative mb-2 p-3 hover:shadow-md transition-shadow ${getBgColor(closing_probability)}`}
     >
+      {/* Clique no card inteiro */}
+      <div
+        className="absolute inset-0"
+        onClick={(e) => {
+          // Verifica se o clique foi em um botão
+          const target = e.target as HTMLElement;
+          if (!target.closest('button')) {
+            onCardClick(opportunity.id);
+          }
+        }}
+      />
+
+      {/* Informações */}
       <div className="space-y-2">
         <h3 className="font-medium text-sm line-clamp-2">{title}</h3>
-        
+
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <DollarSign className="h-3 w-3 mr-1" />
             <span>{formatCurrency(value)}</span>
           </div>
           <div className="bg-background px-1.5 py-0.5 rounded text-xs font-medium">
-            {closingProbability}%
+            {closing_probability ? `${closing_probability}%` : '0%'}
           </div>
         </div>
-        
-        {(expectedCloseDate || assignedTo) && (
+
+        {(expected_close_date || assigned_to) && (
           <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
-            {expectedCloseDate && (
+            {expected_close_date && (
               <div className="flex items-center">
                 <Calendar className="h-3 w-3 mr-1" />
                 <span>
-                  {new Date(expectedCloseDate).toLocaleDateString('pt-BR')}
+                  {expected_close_date ? format(new Date(expected_close_date), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não definida'}
                 </span>
               </div>
             )}
-            
-            {assignedTo && (
+            {assigned_to && (
               <div className="flex items-center">
                 <User className="h-3 w-3 mr-1" />
-                <span>{assignedTo}</span>
+                <span>{assigned_to}</span>
               </div>
             )}
           </div>
         )}
+      </div>
+
+      {/* Clique no card inteiro */}
+      <div
+        className="absolute inset-0"
+        onClick={(e) => {
+          // Verifica se o clique foi em um botão
+          const target = e.target as HTMLElement;
+          if (!target.closest('button')) {
+            onCardClick(opportunity.id);
+          }
+        }}
+      />
+
+      {/* Botões de ação */}
+      <div className="mt-2 flex justify-end gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-destructive hover:text-red-600 z-10"
+          onClick={(e) => {
+            e.stopPropagation(); // Impede que clique acione o onCardClick
+            e.preventDefault(); // Previne qualquer comportamento padrão
+            onDeleteClick(opportunity);
+          }}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-primary z-10"
+          onClick={(e) => {
+            e.stopPropagation(); // Impede que clique acione o onCardClick
+            e.preventDefault(); // Previne qualquer comportamento padrão
+            onEditClick(opportunity);
+          }}
+        >
+          <Pencil className="w-4 h-4" />
+        </Button>
       </div>
     </Card>
   );

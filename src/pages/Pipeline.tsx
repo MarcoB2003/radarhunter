@@ -1,246 +1,310 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import MainLayout from '../components/layout/MainLayout';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, Calendar, ChevronDown, Filter, BarChart } from 'lucide-react';
-import { fetchOpportunities, createOpportunity, updateOpportunity } from '@/services/opportunityService';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store';
-import { Opportunity } from '@/types';
-import PipelineStage from '@/components/opportunities/PipelineStage';
-import OpportunityModal from '@/components/opportunities/OpportunityModal';
-import { toast } from '@/components/ui/use-toast';
+import { Button } from '../components/ui/button';
+import { Plus } from 'lucide-react';
+import { fetchOpportunities, createOpportunity, updateOpportunity, deleteOpportunity } from '../services/opportunityService';
+import { Opportunity, OpportunityStage } from '../types';
+import PipelineSummary from '../components/opportunities/PipelineSummary';
+import PipelineFilter from '../components/opportunities/PipelineFilter';
+import { calculatePipelineMetrics, STAGES } from '../lib/pipeline-utils';
+import OpportunityModal from '../components/opportunities/OpportunityModal';
+import PipelineStage from '../components/opportunities/PipelineStage';
+import { toast } from '../hooks/use-toast';
+import { v4 as uuidv4 } from 'uuid';
+import { initialOpportunities } from '../data/pipelineData';
+import { supabase } from '@/lib/supabaseClient';
 
 const Pipeline: React.FC = () => {
   const queryClient = useQueryClient();
-  const { pipelineStages } = useSelector((state: RootState) => state.opportunities);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [initialStageId, setInitialStageId] = useState<string | undefined>(undefined);
+  const [currentFilter, setCurrentFilter] = useState('all');
+  const [localOpportunities, setLocalOpportunities] = useState<Opportunity[]>([]);
+  const [isFetching, setIsFetching] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Fetch opportunities from Supabase
-  const { data: opportunities = [], isLoading, error } = useQuery({
+  useEffect(() => {
+    loadFromSupabase();
+  }, []);
+
+  const loadFromSupabase = async () => {
+    try {
+      setIsFetching(true);
+      setFetchError(null);
+      const data = await fetchOpportunities();
+      setLocalOpportunities(data);
+    } catch (error) {
+      console.error('Erro ao carregar do Supabase:', error);
+      setFetchError('Erro ao carregar dados do Supabase');
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar dados do Supabase. Usando dados locais.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  const { data: opportunities, error: queryError, isLoading: isQueryLoading } = useQuery({
     queryKey: ['opportunities'],
-    queryFn: fetchOpportunities
+    queryFn: fetchOpportunities,
   });
 
-  // Mutations for creating and updating opportunities
+  useEffect(() => {
+    if (opportunities) {
+      setLocalOpportunities(opportunities);
+    }
+  }, [opportunities]);
+
   const createMutation = useMutation({
     mutationFn: createOpportunity,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-      setIsModalOpen(false);
-      toast({
-        title: "Oportunidade criada",
-        description: "A oportunidade foi criada com sucesso."
-      });
     },
     onError: (error) => {
-      console.error('Error creating opportunity:', error);
-      toast({
-        title: "Erro ao criar oportunidade",
-        description: "Não foi possível criar a oportunidade.",
-        variant: "destructive"
-      });
-    }
-  });
-  
-  const updateMutation = useMutation({
-    mutationFn: (data: Partial<Opportunity>) => 
-      updateOpportunity(data.id as string, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
-      setIsModalOpen(false);
-      setSelectedOpportunity(null);
-      toast({
-        title: "Oportunidade atualizada",
-        description: "A oportunidade foi atualizada com sucesso."
-      });
-    },
-    onError: (error) => {
-      console.error('Error updating opportunity:', error);
-      toast({
-        title: "Erro ao atualizar oportunidade",
-        description: "Não foi possível atualizar a oportunidade.",
-        variant: "destructive"
-      });
+      console.error('Erro ao criar oportunidade:', error);
     }
   });
 
-  // Group opportunities by stage
-  const opportunitiesByStage = pipelineStages.reduce((acc, stage) => {
-    acc[stage.id] = opportunities.filter(opp => opp.stageId === stage.id);
+  const updateMutation = useMutation({
+    mutationFn: (data: { id: string; updates: Partial<Opportunity> }) => updateOpportunity(data.id, data.updates),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao atualizar oportunidade:', error);
+    }
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteOpportunity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['opportunities'] });
+    },
+    onError: (error) => {
+      console.error('Erro ao deletar oportunidade:', error);
+    }
+  });
+
+  const handleDeleteOpportunity = async (id: string) => {
+    try {
+      await deleteMutation.mutateAsync(id);
+      toast({
+        title: 'Sucesso',
+        description: 'Oportunidade deletada com sucesso!',
+        variant: 'default'
+      });
+    } catch (error) {
+      console.error('Erro ao deletar oportunidade:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao deletar oportunidade. Tente novamente.',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleSaveOpportunity = async (data: Partial<Opportunity>) => {
+    const timestamp = new Date().toISOString();
+    console.log('Dados recebidos no handleSaveOpportunity:', data);
+
+    if (selectedOpportunity) {
+      const updatedData: Opportunity = {
+        ...selectedOpportunity,
+        ...data,
+        stage_id: selectedOpportunity.stage_id, // Mantém o stage_id original
+        lead_id: data.lead_id || selectedOpportunity.lead_id,
+        assigned_to: data.assigned_to || selectedOpportunity.assigned_to,
+        contact_id: data.contact_id || selectedOpportunity.contact_id,
+        updated_at: timestamp
+      };
+
+      setLocalOpportunities(prev =>
+        prev.map(opportunity =>
+          opportunity.id === selectedOpportunity.id ? updatedData : opportunity
+        )
+      );
+      
+      try {
+        await updateMutation.mutateAsync({ id: selectedOpportunity.id, updates: updatedData });
+        toast({
+          title: 'Sucesso',
+          description: 'Oportunidade atualizada com sucesso!',
+          variant: 'default'
+        });
+      } catch (error) {
+        console.error('Erro ao atualizar oportunidade:', error);
+        toast({
+          title: 'Erro',
+          description: 'Erro ao atualizar oportunidade. Tente novamente.',
+          variant: 'destructive'
+        });
+        setLocalOpportunities(prev =>
+          prev.map(opportunity =>
+            opportunity.id === selectedOpportunity.id ? selectedOpportunity : opportunity
+          )
+        );
+      }
+    } else {
+      const newOpportunity: Omit<Opportunity, 'id'> = {
+        title: data.title || '',
+        value: data.value || 0,
+        stage_id: initialStageId as OpportunityStage || STAGES[0].id,
+        closing_probability: data.closing_probability || 50,
+        expected_close_date: data.expected_close_date || null,
+        notes: data.notes || null,
+        created_at: timestamp,
+        updated_at: timestamp,
+        owner: uuidv4(),
+        lead_id: data.lead_id || null,
+        assigned_to: data.assigned_to || null,
+        contact_id: data.contact_id || null,
+        buying_signals: data.buying_signals || [],
+        proposal_generated: data.proposal_generated || false,
+        objection_handling: data.objection_handling || [],
+        urgency_factors: data.urgency_factors || []
+      };
+
+      console.log('Nova oportunidade a ser criada:', newOpportunity);
+      
+      // Primeiro cria o objeto local com ID temporário
+      const tempOpportunity: Opportunity = {
+        ...newOpportunity,
+        id: uuidv4()
+      };
+      
+      setLocalOpportunities(prev => [...prev, tempOpportunity]);
+      
+      try {
+        // Remove o ID temporário antes de enviar para o Supabase
+        const result = await createMutation.mutateAsync({
+          title: newOpportunity.title,
+          value: newOpportunity.value,
+          stage_id: newOpportunity.stage_id,
+          closing_probability: newOpportunity.closing_probability,
+          expected_close_date: newOpportunity.expected_close_date,
+          notes: newOpportunity.notes,
+          buying_signals: newOpportunity.buying_signals,
+          proposal_generated: newOpportunity.proposal_generated,
+          objection_handling: newOpportunity.objection_handling,
+          urgency_factors: newOpportunity.urgency_factors,
+          lead_id: newOpportunity.lead_id,
+          assigned_to: newOpportunity.assigned_to,
+          contact_id: newOpportunity.contact_id,
+          created_at: newOpportunity.created_at,
+          updated_at: newOpportunity.updated_at,
+          owner: newOpportunity.owner
+        } as Omit<Opportunity, 'id'>);
+
+        // Atualiza o estado local com o ID temporário
+        setLocalOpportunities(prev => 
+          prev.map(opportunity => 
+            opportunity.id === tempOpportunity.id ? tempOpportunity : opportunity
+          )
+        );
+        
+        toast({
+          title: 'Sucesso',
+          description: 'Oportunidade criada com sucesso!',
+          variant: 'default'
+        });
+      } catch (error) {
+        console.error('Erro ao criar oportunidade:', error);
+        // Remove a oportunidade local se houver erro
+        setLocalOpportunities(prev => prev.filter(opportunity => opportunity.id !== tempOpportunity.id));
+        toast({
+          title: 'Erro',
+          description: 'Erro ao criar oportunidade. Tente novamente.',
+          variant: 'destructive'
+        });
+        return;
+      }
+    }
+  };
+
+  const opportunitiesByStage = STAGES.reduce((acc, stage) => {
+    acc[stage.id] = localOpportunities.filter(opportunity => opportunity.stage_id === stage.id);
     return acc;
   }, {} as Record<string, Opportunity[]>);
 
-  // Handlers
-  const handleOpenModal = (stageId?: string) => {
-    setSelectedOpportunity(null);
-    setInitialStageId(stageId);
-    setIsModalOpen(true);
-  };
-  
-  const handleCardClick = (id: string) => {
-    const opportunity = opportunities.find(opp => opp.id === id);
-    if (opportunity) {
-      setSelectedOpportunity(opportunity);
-      setIsModalOpen(true);
-    }
-  };
-
-  const handleSaveOpportunity = (data: Partial<Opportunity>) => {
-    if (selectedOpportunity) {
-      // Update existing opportunity
-      updateMutation.mutate({
-        ...selectedOpportunity,
-        ...data
-      });
-    } else {
-      // Create new opportunity with default values for required fields
-      const newOpportunity = {
-        ...data,
-        leadId: data.leadId || 'placeholder', // Temporary until leads are integrated
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      createMutation.mutate(newOpportunity as any);
-    }
-  };
-
-  // Calculate totals for summary card
-  const totalOpportunities = opportunities.length;
-  const totalValue = opportunities.reduce((sum, opp) => sum + opp.value, 0);
-  const weightedValue = opportunities.reduce(
-    (sum, opp) => sum + (opp.value * (opp.closingProbability / 100)), 
-    0
-  );
-
-  if (error) {
-    return (
-      <MainLayout title="Pipeline de Vendas">
-        <div className="bg-destructive/10 p-4 rounded-md">
-          <h3 className="text-destructive font-medium">Erro ao carregar pipeline</h3>
-          <p className="text-sm">Não foi possível carregar as oportunidades. Tente novamente mais tarde.</p>
-        </div>
-      </MainLayout>
-    );
-  }
+  const metrics = calculatePipelineMetrics(localOpportunities);
 
   return (
     <MainLayout title="Pipeline de Vendas">
-      <div className="space-y-6">
-        {/* Header and Actions */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-semibold">Pipeline de Vendas</h2>
-            <p className="text-muted-foreground text-sm">
-              Gerencie suas oportunidades em cada estágio do funil
-            </p>
-          </div>
-          
+      <div className="flex flex-col min-h-screen bg-background">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h1 className="text-2xl font-bold">Pipeline de Vendas</h1>
           <div className="flex gap-2">
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filtros
-              <ChevronDown className="h-4 w-4 ml-2" />
-            </Button>
-            <Button variant="outline">
-              <Calendar className="h-4 w-4 mr-2" />
-              Este Mês
-              <ChevronDown className="h-4 w-4 ml-2" />
-            </Button>
-            <Button onClick={() => handleOpenModal()}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Oportunidade
+            <PipelineFilter currentFilter={currentFilter} onFilterChange={setCurrentFilter} />
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />Nova Oportunidade
             </Button>
           </div>
         </div>
-        
-        {/* Pipeline View */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {pipelineStages.map(stage => (
-              <div key={stage.id} className="flex flex-col">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-medium">{stage.name}</h3>
-                </div>
-                <div className="flex-1 bg-muted/30 rounded-lg p-2 min-h-[200px] animate-pulse" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {pipelineStages.map(stage => (
-              <PipelineStage 
-                key={stage.id}
-                stage={stage}
-                opportunities={opportunitiesByStage[stage.id] || []}
-                onCardClick={handleCardClick}
-                onAddClick={handleOpenModal}
-              />
-            ))}
-          </div>
-        )}
-        
-        {/* Pipeline Summary */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Resumo do Pipeline</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {totalOpportunities > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 bg-muted/30 rounded-md text-center">
-                  <p className="text-sm text-muted-foreground">Total de Oportunidades</p>
-                  <p className="text-2xl font-bold mt-1">{totalOpportunities}</p>
-                </div>
-                <div className="p-4 bg-muted/30 rounded-md text-center">
-                  <p className="text-sm text-muted-foreground">Valor Total</p>
-                  <p className="text-2xl font-bold mt-1">
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL'
-                    }).format(totalValue)}
-                  </p>
-                </div>
-                <div className="p-4 bg-muted/30 rounded-md text-center">
-                  <p className="text-sm text-muted-foreground">Valor Ponderado</p>
-                  <p className="text-2xl font-bold mt-1">
-                    {new Intl.NumberFormat('pt-BR', {
-                      style: 'currency',
-                      currency: 'BRL'
-                    }).format(weightedValue)}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center gap-2 py-4">
-                <BarChart className="h-5 w-5 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  Adicione oportunidades para visualizar o resumo do pipeline
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Opportunity Modal */}
-      <OpportunityModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedOpportunity(null);
-          setInitialStageId(undefined);
-        }}
-        onSave={handleSaveOpportunity}
-        opportunity={selectedOpportunity || undefined}
-        stages={pipelineStages}
-        initialStageId={initialStageId}
-      />
+        <div className="flex-1 p-4 space-y-6">
+          {isFetching ? (
+            <div className="flex items-center justify-center h-32">
+              <span className="text-muted-foreground">Carregando dados...</span>
+            </div>
+          ) : fetchError ? (
+            <div className="flex flex-col items-center justify-center h-32">
+              <span className="text-destructive">Erro ao carregar dados: {fetchError}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadFromSupabase}
+                className="mt-2"
+              >
+                Tentar novamente
+              </Button>
+            </div>
+          ) : (
+            <>
+              <PipelineSummary metrics={metrics} />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                {STAGES.map(stage => (
+                  <PipelineStage
+                    key={stage.id}
+                    stage={stage}
+                    opportunities={opportunitiesByStage[stage.id] || []}
+                    onCardClick={(id) => {
+                      const opportunity = localOpportunities.find(o => o.id === id);
+                      setSelectedOpportunity(opportunity || null);
+                    }}
+                    onAddClick={() => {
+                      setInitialStageId(stage.id);
+                      setIsModalOpen(true);
+                    }}
+                    onDeleteClick={(opportunity: Opportunity) => handleDeleteOpportunity(opportunity.id)}
+                    onEditClick={(opportunity: Opportunity) => {
+                      setSelectedOpportunity({ ...opportunity });
+                      setIsModalOpen(true);
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        <OpportunityModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedOpportunity(null);
+            setInitialStageId(undefined);
+          }}
+          onSave={handleSaveOpportunity}
+          opportunity={selectedOpportunity || undefined}
+          stages={STAGES}
+          initialStageId={initialStageId}
+        />
+      </div>
     </MainLayout>
   );
 };
