@@ -61,29 +61,29 @@ const OpportunityCard: React.FC<OpportunityCardProps> = ({
         <h3 className="font-medium text-sm line-clamp-2">{title}</h3>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-3 w-3 mr-1" />
-            <span>{formatCurrency(value)}</span>
+          <div className="flex items-center gap-1 max-w-[70%] overflow-hidden text-ellipsis">
+            <DollarSign className="h-3 w-3 flex-shrink-0" />
+            <span className="truncate">{formatCurrency(value)}</span>
           </div>
-          <div className="bg-background px-1.5 py-0.5 rounded text-xs font-medium">
+          <div className="bg-background px-1.5 py-0.5 rounded text-xs font-medium flex-shrink-0">
             {closing_probability ? `${closing_probability}%` : '0%'}
           </div>
         </div>
 
         {(expected_close_date || assigned_to) && (
-          <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
+          <div className="flex flex-col space-y-1 text-xs text-muted-foreground pt-2 border-t border-border">
             {expected_close_date && (
               <div className="flex items-center">
-                <Calendar className="h-3 w-3 mr-1" />
-                <span>
+                <Calendar className="h-3 w-3 mr-1 flex-shrink-0" />
+                <span className="truncate">
                   {expected_close_date ? format(new Date(expected_close_date), 'dd/MM/yyyy', { locale: ptBR }) : 'Data não definida'}
                 </span>
               </div>
             )}
             {assigned_to && (
               <div className="flex items-center">
-                <User className="h-3 w-3 mr-1" />
-                <span>{assigned_to}</span>
+                <User className="h-3 w-3 mr-1 flex-shrink-0" />
+                <span className="truncate">{assigned_to}</span>
               </div>
             )}
           </div>

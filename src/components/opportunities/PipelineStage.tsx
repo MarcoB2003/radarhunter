@@ -23,17 +23,18 @@ const PipelineStage: React.FC<PipelineStageProps> = ({
   onEditClick
 }) => {
   return (
-    <div className="flex flex-col">
-      <div className="flex justify-between items-center mb-2">
-        <h3 className="font-medium">{stage.name}</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full">
+    <div className="flex flex-col h-full">
+      <div className="flex flex-wrap justify-between items-center mb-2 gap-2">
+        <h3 className="font-medium whitespace-nowrap">{stage.name}</h3>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-xs font-medium bg-secondary text-secondary-foreground px-2 py-1 rounded-full flex-shrink-0">
             {opportunities.length}
           </span>
           <Button
             variant="outline"
             size="sm"
             onClick={() => onAddClick(stage.id)}
+            className="flex-shrink-0 whitespace-nowrap"
           >
             <Plus className="h-3 w-3 mr-1" />
             Adicionar

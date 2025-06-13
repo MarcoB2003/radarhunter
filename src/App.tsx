@@ -10,14 +10,15 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Dashboard from "./pages/Dashboard";
-import LeadsPage from "./pages/leads/LeadsPage";
-import LeadImport from "./pages/leads/LeadImport"; // <-- correto
+import CompanySearch from "./pages/CompanySearch"; // Nova página de busca com IA
+import Leads from "./pages/Leads"; // Importing our new Leads page
+import LeadImport from "./pages/leads/LeadImport";
 import Pipeline from "./pages/Pipeline";
 import Chatbot from "./pages/Chatbot";
 import NotFound from "./pages/NotFound";
-import Meetings from "./pages/Meetings"; // Nova importação
+import Meetings from "./pages/Meetings";
 // Pages
-import EmpresasPage from "./pages/EmpresasPage";
+import Companies from "./pages/Companies";
 import CampaignsPage from "./pages/CampaignsPage";
 import SocialPage from "./pages/SocialPage";
 import ReportsPage from "./pages/ReportsPage";
@@ -49,14 +50,15 @@ const App = () => (
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/leads" element={<LeadsPage />} />
-                <Route path="/leads/importar" element={<LeadImport />} /> {/* <-- corrigido aqui */}
+                <Route path="/company-search" element={<CompanySearch />} /> {/* Nova rota de busca com IA */}
+                <Route path="/leads" element={<Leads />} /> {/* Using our new Leads page with import UI */}
+                <Route path="/leads/importar" element={<LeadImport />} />
                 <Route path="/pipeline" element={<Pipeline />} />
                 <Route path="/meetings" element={<Meetings />} />
                 <Route path="/chatbot" element={<Chatbot />} />
                 
                 {/* Analytics & Automation routes */}
-                <Route path="/empresas" element={<EmpresasPage />} />
+                <Route path="/companies" element={<Companies />} />
                 <Route path="/campaigns" element={<CampaignsPage />} />
                 <Route path="/social" element={<SocialPage />} />
                 <Route path="/reports" element={<ReportsPage />} />

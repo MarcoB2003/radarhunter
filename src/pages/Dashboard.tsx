@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -21,6 +22,7 @@ import { fetchLeadsStart, fetchLeadsSuccess, fetchLeadsFailed } from '../store/s
 import { fetchOpportunitiesStart, fetchOpportunitiesSuccess, fetchOpportunitiesFailed } from '../store/slices/opportunitiesSlice';
 import { fetchLeads as fetchLeadsService } from '../services/leadService';
 import { fetchOpportunities as fetchOpportunitiesService } from '../services/opportunityService';
+import { Opportunity } from '@/types/opportunity'; // Correct opportunity type import
 import { toast } from '@/components/ui/use-toast';
 
 // Import dos novos componentes que vamos criar
@@ -35,9 +37,14 @@ import CampaignsDashboard from '@/components/empresas/CampaignsDashboard';
 
 const Dashboard: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { items: leads, loading: leadsLoading } = useAppSelector(state => state.leads);
   const { items: opportunities } = useAppSelector(state => state.opportunities);
   const [activeTab, setActiveTab] = useState('overview');
+  
+  const handleNavigateToCompanySearch = () => {
+    navigate('/company-search');
+  };
   
   useEffect(() => {
     const loadData = async () => {
@@ -48,7 +55,8 @@ const Dashboard: React.FC = () => {
         
         dispatch(fetchOpportunitiesStart());
         const opportunitiesData = await fetchOpportunitiesService();
-        dispatch(fetchOpportunitiesSuccess(opportunitiesData));
+        // Força a conversão do tipo para resolver a incompatibilidade
+        dispatch(fetchOpportunitiesSuccess(opportunitiesData as any));
       } catch (error) {
         dispatch(fetchLeadsFailed(error instanceof Error ? error.message : 'Failed to fetch data'));
         dispatch(fetchOpportunitiesFailed(error instanceof Error ? error.message : 'Failed to fetch data'));
@@ -91,6 +99,16 @@ const Dashboard: React.FC = () => {
   return (
     <MainLayout title="Dashboard">
       <div className="space-y-6">
+        {/* Botão de buscar empresas com IA */}
+        <div className="flex justify-end">
+          <Button 
+            className="bg-blue-600 hover:bg-blue-700 text-white" 
+            onClick={handleNavigateToCompanySearch}
+          >
+            Buscar empresas com IA
+          </Button>
+        </div>
+        
         {/* Header com KPIs principais */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {mainKPIs.map((kpi, index) => (

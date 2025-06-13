@@ -38,15 +38,15 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({ to, icon, label }) => {
     <NavLink
       to={to}
       className={({ isActive }) => 
-        `flex items-center py-3 px-4 rounded-md transition-colors ${
+        `flex items-center py-2 px-3 rounded-md text-sm transition-colors ${
           isActive 
             ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
             : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
         }`
       }
     >
-      <div className="mr-3">{icon}</div>
-      <span>{label}</span>
+      <div className="mr-2">{icon}</div>
+      <span className="truncate">{label}</span>
     </NavLink>
   );
 };
@@ -55,57 +55,61 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed left-0 top-0 w-64 h-screen bg-sidebar-background transition-all duration-300 shadow-lg">
+    <div className="fixed left-0 top-0 w-60 h-screen bg-sidebar-background transition-all duration-300 shadow-lg">
       {/* Logo */}
-      <div className="flex items-center justify-center h-16 border-b border-sidebar-border">
-        <h1 className="text-xl font-bold text-black">
+      <div className="flex items-center justify-center h-14 border-b border-sidebar-border">
+        <h1 className="text-lg font-bold text-black">
           RadarHunter Pro
         </h1>
       </div>
 
-      {/* Navigation */}
-      <nav className="mt-6 px-3">
-        <div className="space-y-1">
-          <SidebarLink to="/dashboard" icon={<LayoutDashboard className="h-5 w-5" />} label="Dashboard" />
-          <SidebarLink to="/leads" icon={<Users className="h-5 w-5" />} label="Leads" />
-          <SidebarLink to="/pipeline" icon={<PieChart className="h-5 w-5" />} label="Pipeline" />
-          <SidebarLink to="/meetings" icon={<Calendar className="h-5 w-5" />} label="Reuniões" />
+      {/* Navigation - Now with scrolling */}
+      <nav className="h-[calc(100vh-3.5rem)] overflow-y-auto py-2 px-2">
+        <div className="space-y-0.5">
+          <SidebarLink to="/dashboard" icon={<LayoutDashboard className="h-4 w-4" />} label="Dashboard" />
+          <SidebarLink to="/leads" icon={<Users className="h-4 w-4" />} label="Leads" />
+          <SidebarLink to="/pipeline" icon={<PieChart className="h-4 w-4" />} label="Pipeline" />
+          <SidebarLink to="/meetings" icon={<Calendar className="h-4 w-4" />} label="Reuniões" />
         </div>
 
         {/* IA Section */}
-        <div className="pt-6 mt-6 border-t border-sidebar-border">
-          <div className="px-4 mb-2">
+        <div className="pt-3 mt-3 border-t border-sidebar-border">
+          <div className="px-3 mb-1">
             <h3 className="text-xs uppercase tracking-wider text-sidebar-foreground/60 font-semibold">
               Inteligência Artificial
             </h3>
           </div>
-          <div className="space-y-1">
-            <SidebarLink to="/ai-scoring" icon={<Brain className="h-5 w-5" />} label="Scoring IA" />
-            <SidebarLink to="/ai-sdr" icon={<Target className="h-5 w-5" />} label="IA SDR" />
-            <SidebarLink to="/ai-closer" icon={<Zap className="h-5 w-5" />} label="IA Closer" />
-            <SidebarLink to="/ai-manager" icon={<Settings className="h-5 w-5" />} label="Gerente IA" />
+          <div className="space-y-0.5">
+            <SidebarLink to="/ai-scoring" icon={<Brain className="h-4 w-4" />} label="Scoring IA" />
+            <SidebarLink to="/ai-sdr" icon={<Target className="h-4 w-4" />} label="IA SDR" />
+            <SidebarLink to="/ai-closer" icon={<Zap className="h-4 w-4" />} label="IA Closer" />
+            <SidebarLink to="/ai-manager" icon={<Settings className="h-4 w-4" />} label="Gerente IA" />
           </div>
         </div>
 
         {/* Analytics & Automation */}
-        <div className="pt-6 mt-6 border-t border-sidebar-border">
-          <div className="px-4 mb-2">
+        <div className="pt-3 mt-3 border-t border-sidebar-border">
+          <div className="px-3 mb-1">
             <h3 className="text-xs uppercase tracking-wider text-sidebar-foreground/60 font-semibold">
               Analytics & Automação
             </h3>
           </div>
-          <div className="space-y-1">
-            <SidebarLink to="/empresas" icon={<BarChart3 className="h-5 w-5" />} label="Empresas" />
-            <SidebarLink to="/campaigns" icon={<MessageSquare className="h-5 w-5" />} label="Campanhas" />
-            <SidebarLink to="/social" icon={<Eye className="h-5 w-5" />} label="Social" />
-            <SidebarLink to="/reports" icon={<FilePlus className="h-5 w-5" />} label="Relatórios" />
+          <div className="space-y-0.5">
+            <SidebarLink to="/companies" icon={<BarChart3 className="h-4 w-4" />} label="Empresas" />
+            <SidebarLink to="/campaigns" icon={<MessageSquare className="h-4 w-4" />} label="Campanhas" />
+            <SidebarLink to="/social" icon={<Eye className="h-4 w-4" />} label="Social" />
+            <SidebarLink to="/reports" icon={<FilePlus className="h-4 w-4" />} label="Relatórios" />
           </div>
         </div>
 
         {/* Tools */}
-        <div className="pt-6 mt-6 border-t border-sidebar-border space-y-1">
-          
-          <SidebarLink to="/chatbot" icon={<MessageSquare className="h-5 w-5" />} label="Chatbot" />
+        <div className="pt-3 mt-3 border-t border-sidebar-border space-y-0.5">
+          <div className="px-3 mb-1">
+            <h3 className="text-xs uppercase tracking-wider text-sidebar-foreground/60 font-semibold">
+              Ferramentas
+            </h3>
+          </div>
+          <SidebarLink to="/chatbot" icon={<MessageSquare className="h-4 w-4" />} label="Chatbot" />
         </div>
       </nav>
     </div>

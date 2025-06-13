@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 import { Lead, LeadFormData } from '../types/lead';
-import { useAuth } from '../hooks/useAuth';
+import { EmpresaData } from '@/components/empresas/EmpresaPreview';
+import { supabase as authSupabase } from './authService';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Usamos o mesmo cliente Supabase da autenticação para garantir a sessão do usuário
+export const supabase = authSupabase;
 
 export const supabaseService = {
   async getLeads() {
@@ -74,5 +73,50 @@ export const supabaseService = {
     const { data, error } = await query;
     if (error) throw error;
     return data as Lead[];
+  },
+  
+  // Empresas services
+  async getEmpresas() {
+    const { data, error } = await supabase
+      .from('empresas')
+      .select('*')
+      .order('razao_social', { ascending: true });
+
+    if (error) throw error;
+    return data;
+  },
+
+  async createEmpresa(empresa: EmpresaData) {
+    const { error } = await supabase
+      .from('empresas')
+      .insert([empresa]);
+
+    if (error) throw error;
+  },
+
+  async updateEmpresa(id: string, empresa: Partial<EmpresaData>) {
+    const { error } = await supabase
+      .from('empresas')
+      .update(empresa)
+      .eq('id', id);
+
+    if (error) throw error;
+  },
+
+  async deleteEmpresa(id: string) {
+    const { error } = await supabase
+      .from('empresas')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+  },
+
+  async importEmpresas(empresas: EmpresaData[]) {
+    const { error } = await supabase
+      .from('empresas')
+      .insert(empresas);
+
+    if (error) throw error;
   }
 };

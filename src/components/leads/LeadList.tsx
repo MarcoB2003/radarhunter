@@ -19,8 +19,8 @@ import { ptBR } from 'date-fns/locale';
 export function LeadList() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedPlatform, setSelectedPlatform] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
+  const [selectedPlatform, setSelectedPlatform] = useState('todos');
+  const [selectedStatus, setSelectedStatus] = useState('todos');
   const [engagementOrder, setEngagementOrder] = useState<'asc' | 'desc'>('desc');
   const [uploading, setUploading] = useState(false);
   const [importedLeads, setImportedLeads] = useState<LeadFormData[]>([]);
@@ -30,8 +30,8 @@ export function LeadList() {
     queryKey: ['leads', selectedPlatform, selectedStatus, engagementOrder],
     queryFn: () => 
       supabaseService.filterLeads(
-        selectedPlatform,
-        selectedStatus,
+        selectedPlatform === 'todos' ? '' : selectedPlatform,
+        selectedStatus === 'todos' ? '' : selectedStatus,
         engagementOrder
       ),
   });
@@ -130,7 +130,7 @@ export function LeadList() {
               <SelectValue placeholder="Filtrar por plataforma" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="todos">Todos</SelectItem>
               <SelectItem value="Linkedin">Linkedin</SelectItem>
               <SelectItem value="Instagram">Instagram</SelectItem>
               <SelectItem value="Facebook">Facebook</SelectItem>
@@ -146,7 +146,7 @@ export function LeadList() {
               <SelectValue placeholder="Filtrar por status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos</SelectItem>
+              <SelectItem value="todos">Todos</SelectItem>
               <SelectItem value="Novo">Novo</SelectItem>
               <SelectItem value="Em negociação">Em negociação</SelectItem>
               <SelectItem value="Ganhou">Ganhou</SelectItem>

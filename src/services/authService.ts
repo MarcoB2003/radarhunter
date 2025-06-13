@@ -2,13 +2,12 @@
 import { createClient } from '@supabase/supabase-js';
 import { UserProfile } from '../types';
 
-// Create Supabase client - in a real app these would be environment variables
-// NOTE: Na implementação real, você deve usar variáveis de ambiente para armazenar
-// as credenciais do Supabase e não colocar diretamente no código.
-const supabaseUrl = 'https://gntccknejxmfunltwxuu.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdudGNja25lanhtZnVubHR3eHV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg5NTI1NDEsImV4cCI6MjA2NDUyODU0MX0.xa6SRmR5Su-cKISZu7Owa746DFijlz2UFOgGSQjXIAk';
+// Use environment variables for Supabase credentials
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseServiceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Use service role key for authentication to ensure proper permissions
+export const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 // Usuário de teste para desenvolvimento
 const testUser: UserProfile = {
